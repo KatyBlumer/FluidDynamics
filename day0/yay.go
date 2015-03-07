@@ -29,6 +29,7 @@ func main() {
 
 	graph := image.NewRGBA(image.Rect(0, 0, runs, size))
 	a := make([]float64, size)
+	next := make([]float64, size)
 
 	a[size/5] = start
 	a[size/2] = start
@@ -43,7 +44,8 @@ func main() {
 		fmt.Println(sum(&a))
 
 		//make next row
-		a = update(&a)
+		update(a[:], next[:])
+		a, next = next, a
 	}
 
 	save(graph, "new.png")
@@ -51,23 +53,20 @@ func main() {
 	
 }
 
-func update(prev *[]float64) (next []float64) {
-	size := len(*prev)
-	fmt.Println(size)
-	fmt.Println(prev)
-	fmt.Println(*prev)
+func update(prev []float64, next []float64) {
+	size := len(prev)
 	// first box
-	next[0] = ((2 * (*prev)[0]) + (*prev)[1]) / 3
+	next[0] = ((2 * prev[0]) + prev[1]) / 3
 	for j := 1; j < size-1; j++ {
-		next[j] = ((*prev)[j-1] + (*prev)[j] + (*prev)[j+1]) / 3
+		next[j] = (prev[j-1] + prev[j] + prev[j+1]) / 3
 	}
 	// last box
-	next[size-1] = ((*prev)[size-2] + (2 * (*prev)[size-1])) / 3
+	next[size-1] = (prev[size-2] + (2 * prev[size-1])) / 3
 	return
 }
 
 func createColor(point float64, maxIntensity float64, scale float64) (ans color.Color) {
-	intensity := 255 - uint8(math.Log(point * (255/maxIntensity)))
+	intensity := -uint8(math.Log(point)  * (255/maxIntensity))
 	ans = color.RGBA{0, intensity, 0, 255}
 	return
 }

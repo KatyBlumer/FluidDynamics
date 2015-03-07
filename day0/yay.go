@@ -5,11 +5,7 @@ import (
 	"image"
 	"image/color"
 	// "image/draw"
-	"image/png"
 	"math"
-	"log"
-	"os"
-	"os/exec"
 )
 
 var (
@@ -69,29 +65,4 @@ func createColor(point float64, maxIntensity float64, scale float64) (ans color.
 	intensity := -uint8(math.Log(point)  * (255/maxIntensity))
 	ans = color.RGBA{0, intensity, 0, 255}
 	return
-}
-
-func sum(a *[]float64) (s float64) {
-	for _, v := range *a {
-		s += v
-	}
-	return
-}
-
-// save and show  a specified file by Preview.app for OS X(darwin)
-func save(im image.Image, filename string) {
-	w, _ := os.Create(filename)
-	defer w.Close()
-	png.Encode(w, im) //Encode writes the Image m to w in PNG format.
-}
-
-func show(filename string) {
-	command := "open"
-	arg1 := "-a"
-	arg2 := "/Applications/Preview.app"
-	cmd := exec.Command(command, arg1, arg2, filename)
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
 }

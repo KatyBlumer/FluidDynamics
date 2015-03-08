@@ -15,6 +15,7 @@ func main() {
 	size := 41
 	// t := 1.0
 	
+	baseIntensity = 1.0
 	maxIntensity := float64(2.0)
 
 	const width = float64(2)
@@ -30,7 +31,7 @@ func main() {
 	next := make([]float64, size)
 
 	for i := 0; i < size; i++ {
-		a[i] = 1.0
+		a[i] = baseIntensity
 	}
 	for i := 15; i < 26; i++ {
 		a[i] = maxIntensity
@@ -59,7 +60,7 @@ func update(prev []float64, next []float64, consts SimConstants) {
 	ratio := consts.tstep / consts.xstep
 	size := len(prev)
 	// first box
-	next[0] = prev[0] - ratio * prev[0] * prev[0]
+	next[0] = prev[0] - ratio * prev[0] * (prev[0] - baseIntensity)
 	for i := 1; i < size; i++ {
 		next[i] = prev[i] - ratio * prev[i] * (prev[i] - prev[i-1])
 	}

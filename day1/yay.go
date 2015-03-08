@@ -7,7 +7,7 @@ import (
 )
 
 type SimConstants struct {
-	c, tstep, xstep float64
+	baseIntensity, c, tstep, xstep float64
 }
 
 func main() {
@@ -15,11 +15,11 @@ func main() {
 	size := 41
 	// t := 1.0
 	
-	baseIntensity = 1.0
 	maxIntensity := float64(2.0)
 
 	const width = float64(2)
 	consts := SimConstants {
+		baseIntensity: 1.0,
 		c: float64(1.0), 
 		tstep: float64(0.025), 
 		xstep: float64(width / float64(size-1)),
@@ -31,7 +31,7 @@ func main() {
 	next := make([]float64, size)
 
 	for i := 0; i < size; i++ {
-		a[i] = baseIntensity
+		a[i] = consts.baseIntensity
 	}
 	for i := 15; i < 26; i++ {
 		a[i] = maxIntensity
@@ -60,7 +60,7 @@ func update(prev []float64, next []float64, consts SimConstants) {
 	ratio := consts.tstep / consts.xstep
 	size := len(prev)
 	// first box
-	next[0] = prev[0] - ratio * prev[0] * (prev[0] - baseIntensity)
+	next[0] = prev[0] - ratio * prev[0] * (prev[0] - consts.baseIntensity)
 	for i := 1; i < size; i++ {
 		next[i] = prev[i] - ratio * prev[i] * (prev[i] - prev[i-1])
 	}

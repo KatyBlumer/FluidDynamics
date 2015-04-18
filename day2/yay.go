@@ -2,8 +2,7 @@ package main
 
 import (
 	"fmt"
-	"image"
-	"image/color"
+	"github.com/KatyBlumer/FluidDynamics/day2/drawing"
 )
 
 // heavily borrowed from: http://nbviewer.ipython.org/github/barbagroup/CFDPython/tree/master/lessons/
@@ -13,10 +12,6 @@ type SimConstants struct {
 	numSteps, numBoxes             int
 }
 
-type ViewConstants struct {
-	maxIntensity float64
-}
-
 func main() {
 
 	// t := 1.0
@@ -24,20 +19,20 @@ func main() {
 	// runs := 20 //int(t / simConsts.tstep)
 
 	simConsts := SimConstants{
-		numSteps:      20,
-		numBoxes:      41,
+		numSteps:      4000,
+		numBoxes:      400,
 		baseIntensity: 1.0,
 		c:             float64(1.0),
-		tstep:         float64(0.025),
+		tstep:         float64(0.00025),
 	}
 	simConsts.xstep = float64(2.0 / float64(simConsts.numBoxes-1))
 
-	viewConsts := ViewConstants{maxIntensity: 2.0}
+	viewConsts := drawing.ViewConstants{MaxIntensity: 2.0}
 
 	width := simConsts.numSteps
 	height := simConsts.numBoxes
 
-	graph := image.NewRGBA(image.Rect(0, 0, width, height))
+	graph := drawing.InitGraph(width, height)
 
 	currRow := make([]float64, simConsts.numBoxes)
 	nextRow := make([]float64, simConsts.numBoxes)
@@ -45,23 +40,31 @@ func main() {
 	for i := 0; i < simConsts.numBoxes; i++ {
 		currRow[i] = simConsts.baseIntensity
 	}
-	for i := 15; i < 26; i++ {
-		currRow[i] = viewConsts.maxIntensity
+	for i := 200; i < 250; i++ {
+		currRow[i] = viewConsts.MaxIntensity
 	}
 
 	for i := 0; i < simConsts.numSteps; i++ {
-		drawRow(i, currRow[:], graph, viewConsts)
-		nextTimeStep(currRow[:], nextRow[:], simConsts)
+		drawing.DrawRow(i, currRow[:], graph, viewConsts)
+		nextTimeStepNavierStokes(currRow[:], nextRow[:], simConsts)
 		fmt.Println(sum(&currRow))
 		currRow, nextRow = nextRow, currRow
 	}
 
-	save(graph, "new.png")
-	show("new.png")
+	drawing.Show(graph)
 
 }
 
-func nextTimeStep(prev []float64, next []float64, simConsts SimConstants) {
+func nextTimeStepAverage(prev []float64, next []float64, simConsts SimConstants) {
+	size := len(prev)
+	next[0] = prev[0]
+	for i := 1; i < size-1; i++ {
+		next[i] = (prev[i-1] + prev[i] + prev[i+1]) / 3
+	}
+	next[size-1] = prev[size-1]
+}
+
+func nextTimeStepNavierStokes(prev []float64, next []float64, simConsts SimConstants) {
 	ratio := simConsts.tstep / simConsts.xstep
 	size := len(prev)
 	// first box
@@ -69,18 +72,5 @@ func nextTimeStep(prev []float64, next []float64, simConsts SimConstants) {
 	for i := 1; i < size; i++ {
 		next[i] = prev[i] - ratio*prev[i]*(prev[i]-prev[i-1])
 	}
-	return
-}
-
-func drawRow(rowNum int, row []float64, graph *image.RGBA, viewConsts ViewConstants) {
-	for j := 0; j < len(row); j++ {
-		color := createColor(row[j], viewConsts.maxIntensity)
-		graph.Set(rowNum, j, color)
-	}
-}
-
-func createColor(pointIntensity float64, maxIntensity float64) (ans color.Color) {
-	intensity := uint8(pointIntensity * (255 / maxIntensity))
-	ans = color.RGBA{intensity, intensity, intensity, 255}
 	return
 }

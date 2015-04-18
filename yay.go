@@ -3,13 +3,14 @@ package main
 import (
 	"fmt"
 	"github.com/KatyBlumer/FluidDynamics/drawing"
+	"math"
 )
 
 // heavily borrowed from: http://nbviewer.ipython.org/github/barbagroup/CFDPython/tree/master/lessons/
 
 type SimConstants struct {
-	baseIntensity, maxIntensity, c, tstep, xstep, sigma float64
-	numSteps, numBoxes                                  int
+	baseIntensity, maxIntensity, c, viscosity, tstep, xstep, sigma float64
+	numSteps, numBoxes                                             int
 }
 
 func main() {
@@ -24,10 +25,11 @@ func main() {
 		baseIntensity: 1.0,
 		maxIntensity:  2.0,
 		c:             float64(1.0),
+		viscosity:     0.3,
 	}
 	simConsts.xstep = float64(2.0 / float64(simConsts.numBoxes-1))
 	simConsts.sigma = 1.0 / simConsts.maxIntensity
-	simConsts.tstep = simConsts.sigma * simConsts.xstep
+	simConsts.tstep = simConsts.sigma * math.Pow(simConsts.xstep, 2) / simConsts.viscosity
 
 	width := simConsts.numSteps
 	height := simConsts.numBoxes
@@ -46,7 +48,7 @@ func main() {
 
 	for i := 0; i < simConsts.numSteps; i++ {
 		drawing.DrawRow(i, currRow[:], graph, simConsts.maxIntensity)
-		nextTimeStepNonLinearConvectionForwardDifferenceX(currRow[:], nextRow[:], simConsts)
+		nextTimeStepDiffusion(currRow[:], nextRow[:], simConsts)
 		fmt.Println(sum(&currRow))
 		currRow, nextRow = nextRow, currRow
 	}
@@ -84,5 +86,17 @@ func nextTimeStepNonLinearConvectionTrapezoidalX(curr []float64, next []float64,
 		next[i] = curr[i] - (ratio/2)*curr[i]*(curr[i+1]-curr[i-1])
 	}
 	next[size-1] = curr[size-1] - ratio*curr[size-1]*(simConsts.baseIntensity-curr[size-1])
+	return
+}
+
+func nextTimeStepDiffusion(curr []float64, next []float64, simConsts SimConstants) {
+	ratio := simConsts.viscosity * simConsts.tstep / math.Pow(simConsts.xstep, 2)
+	size := len(curr)
+	// first box
+	// next[0] = curr[0] - ratio*(2*curr[1]-2*curr[0])
+	for i := 1; i < size-1; i++ {
+		next[i] = curr[i] + ratio*(curr[i+1]-2*curr[i]+curr[i-1])
+	}
+	// next[size-1] = curr[size-1] - ratio*(2*curr[size-2]-2*curr[size-1])
 	return
 }

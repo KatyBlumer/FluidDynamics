@@ -25,6 +25,14 @@ func DrawRow(rowNum int, row []float64, graph *image.RGBA, viewConsts ViewConsta
 }
 
 func createColor(pointIntensity float64, maxIntensity float64) (ans color.Color) {
+	if pointIntensity > maxIntensity {
+		ans = color.RGBA{255, 0, 0, 255} // red
+		return
+	}
+	if pointIntensity <= 0.0 {
+		ans = color.RGBA{0, 255, 0, 255} //green
+		return
+	}
 	intensity := uint8(pointIntensity * (255 / maxIntensity))
 	ans = color.RGBA{intensity, intensity, intensity, 255}
 	return

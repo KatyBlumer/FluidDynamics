@@ -20,7 +20,7 @@ func main() {
 
 	simConsts := SimConstants{
 		numSteps:      4000,
-		numBoxes:      400,
+		numBoxes:      4000,
 		baseIntensity: 1.0,
 		c:             float64(1.0),
 		tstep:         float64(0.00025),
@@ -46,7 +46,7 @@ func main() {
 
 	for i := 0; i < simConsts.numSteps; i++ {
 		drawing.DrawRow(i, currRow[:], graph, viewConsts)
-		nextTimeStepNavierStokes(currRow[:], nextRow[:], simConsts)
+		nextTimeStepNonLinearConvectionTrapezoidalX(currRow[:], nextRow[:], simConsts)
 		fmt.Println(sum(&currRow))
 		currRow, nextRow = nextRow, currRow
 	}
@@ -55,22 +55,34 @@ func main() {
 
 }
 
-func nextTimeStepAverage(prev []float64, next []float64, simConsts SimConstants) {
-	size := len(prev)
-	next[0] = prev[0]
+func nextTimeStepAverage(curr []float64, next []float64, simConsts SimConstants) {
+	size := len(curr)
+	next[0] = curr[0]
 	for i := 1; i < size-1; i++ {
-		next[i] = (prev[i-1] + prev[i] + prev[i+1]) / 3
+		next[i] = (curr[i-1] + curr[i] + curr[i+1]) / 3
 	}
-	next[size-1] = prev[size-1]
+	next[size-1] = curr[size-1]
 }
 
-func nextTimeStepNavierStokes(prev []float64, next []float64, simConsts SimConstants) {
+func nextTimeStepNonLinearConvectionForwardDifferenceX(curr []float64, next []float64, simConsts SimConstants) {
 	ratio := simConsts.tstep / simConsts.xstep
-	size := len(prev)
+	size := len(curr)
 	// first box
-	next[0] = prev[0] - ratio*prev[0]*(prev[0]-simConsts.baseIntensity)
+	next[0] = curr[0] - ratio*curr[0]*(curr[0]-simConsts.baseIntensity)
 	for i := 1; i < size; i++ {
-		next[i] = prev[i] - ratio*prev[i]*(prev[i]-prev[i-1])
+		next[i] = curr[i] - ratio*curr[i]*(curr[i]-curr[i-1])
 	}
+	return
+}
+
+func nextTimeStepNonLinearConvectionTrapezoidalX(curr []float64, next []float64, simConsts SimConstants) {
+	ratio := simConsts.tstep / simConsts.xstep
+	size := len(curr)
+	// first box
+	next[0] = curr[0] - ratio*curr[0]*(curr[0]-simConsts.baseIntensity)
+	for i := 1; i < size-1; i++ {
+		next[i] = curr[i] - (ratio/2)*curr[i]*(curr[i+1]-curr[i-1])
+	}
+	next[size-1] = curr[size-1] - ratio*curr[size-1]*(simConsts.baseIntensity-curr[size-1])
 	return
 }

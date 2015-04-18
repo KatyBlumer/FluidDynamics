@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/KatyBlumer/FluidDynamics/day2/drawing"
+	"github.com/KatyBlumer/FluidDynamics/drawing"
 )
 
 // heavily borrowed from: http://nbviewer.ipython.org/github/barbagroup/CFDPython/tree/master/lessons/
@@ -46,7 +46,7 @@ func main() {
 
 	for i := 0; i < simConsts.numSteps; i++ {
 		drawing.DrawRow(i, currRow[:], graph, viewConsts)
-		nextTimeStepNonLinearConvectionTrapezoidalX(currRow[:], nextRow[:], simConsts)
+		nextTimeStepNonLinearConvectionForwardDifferenceX(currRow[:], nextRow[:], simConsts)
 		fmt.Println(sum(&currRow))
 		currRow, nextRow = nextRow, currRow
 	}

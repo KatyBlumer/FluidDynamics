@@ -8,8 +8,8 @@ import (
 // heavily borrowed from: http://nbviewer.ipython.org/github/barbagroup/CFDPython/tree/master/lessons/
 
 type SimConstants struct {
-	baseIntensity, c, tstep, xstep float64
-	numSteps, numBoxes             int
+	baseIntensity, maxIntensity, c, tstep, xstep, sigma float64
+	numSteps, numBoxes                                  int
 }
 
 func main() {
@@ -22,12 +22,12 @@ func main() {
 		numSteps:      4000,
 		numBoxes:      4000,
 		baseIntensity: 1.0,
+		maxIntensity:  2.0,
 		c:             float64(1.0),
-		tstep:         float64(0.00025),
 	}
 	simConsts.xstep = float64(2.0 / float64(simConsts.numBoxes-1))
-
-	viewConsts := drawing.ViewConstants{MaxIntensity: 2.0}
+	simConsts.sigma = 1.0 / simConsts.maxIntensity
+	simConsts.tstep = simConsts.sigma * simConsts.xstep
 
 	width := simConsts.numSteps
 	height := simConsts.numBoxes
@@ -41,11 +41,11 @@ func main() {
 		currRow[i] = simConsts.baseIntensity
 	}
 	for i := 200; i < 250; i++ {
-		currRow[i] = viewConsts.MaxIntensity
+		currRow[i] = simConsts.maxIntensity
 	}
 
 	for i := 0; i < simConsts.numSteps; i++ {
-		drawing.DrawRow(i, currRow[:], graph, viewConsts)
+		drawing.DrawRow(i, currRow[:], graph, simConsts.maxIntensity)
 		nextTimeStepNonLinearConvectionForwardDifferenceX(currRow[:], nextRow[:], simConsts)
 		fmt.Println(sum(&currRow))
 		currRow, nextRow = nextRow, currRow

@@ -9,17 +9,13 @@ import (
 	"os/exec"
 )
 
-type ViewConstants struct {
-	MaxIntensity float64
-}
-
 func InitGraph(width, height int) *image.RGBA {
 	return image.NewRGBA(image.Rect(0, 0, width, height))
 }
 
-func DrawRow(rowNum int, row []float64, graph *image.RGBA, viewConsts ViewConstants) {
+func DrawRow(rowNum int, row []float64, graph *image.RGBA, maxIntensity float64) {
 	for j := 0; j < len(row); j++ {
-		color := createColor(row[j], viewConsts.MaxIntensity)
+		color := createColor(row[j], maxIntensity)
 		graph.Set(rowNum, j, color)
 	}
 }

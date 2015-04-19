@@ -48,7 +48,7 @@ func main() {
 
 	for i := 0; i < simConsts.numSteps; i++ {
 		drawing.DrawRow(i, currRow[:], graph, simConsts.maxIntensity)
-		nextTimeStepDiffusion(currRow[:], nextRow[:], simConsts)
+		nextTimeStepBurgers(currRow[:], nextRow[:], simConsts)
 		fmt.Println(sum(&currRow))
 		currRow, nextRow = nextRow, currRow
 	}
@@ -98,5 +98,17 @@ func nextTimeStepDiffusion(curr []float64, next []float64, simConsts SimConstant
 		next[i] = curr[i] + ratio*(curr[i+1]-2*curr[i]+curr[i-1])
 	}
 	// next[size-1] = curr[size-1] - ratio*(2*curr[size-2]-2*curr[size-1])
+	return
+}
+
+func nextTimeStepBurgers(curr []float64, next []float64, simConsts SimConstants) {
+	coeff1 := simConsts.tstep / simConsts.xstep
+	coeff2 := simConsts.viscosity * simConsts.tstep / math.Pow(simConsts.xstep, 2)
+
+	size := len(curr)
+
+	for i := 1; i < size-1; i++ {
+		next[i] = curr[i] + coeff1*curr[i]*(curr[i]-curr[i-1]) + coeff2*(curr[i+1]-2*curr[i]+curr[i-1])
+	}
 	return
 }

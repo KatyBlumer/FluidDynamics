@@ -20,12 +20,12 @@ func main() {
 	// runs := 20 //int(t / simConsts.tstep)
 
 	simConsts := SimConstants{
-		numSteps:      4000,
-		numBoxes:      4000,
+		numSteps:      1000,
+		numBoxes:      400,
 		baseIntensity: 1.0,
 		maxIntensity:  2.0,
 		c:             float64(1.0),
-		viscosity:     0.3,
+		viscosity:     0.2,
 	}
 	simConsts.xstep = float64(2.0 / float64(simConsts.numBoxes-1))
 	simConsts.sigma = 1.0 / simConsts.maxIntensity
@@ -42,7 +42,7 @@ func main() {
 	for i := 0; i < simConsts.numBoxes; i++ {
 		currRow[i] = simConsts.baseIntensity
 	}
-	for i := 200; i < 250; i++ {
+	for i := 160; i < 240; i++ {
 		currRow[i] = simConsts.maxIntensity
 	}
 
@@ -107,8 +107,15 @@ func nextTimeStepBurgers(curr []float64, next []float64, simConsts SimConstants)
 
 	size := len(curr)
 
-	for i := 1; i < size-1; i++ {
-		next[i] = curr[i] + coeff1*curr[i]*(curr[i]-curr[i-1]) + coeff2*(curr[i+1]-2*curr[i]+curr[i-1])
+	for i := 0; i < size; i++ {
+		left, right := i-1, i+1
+		if left < 0 {
+			left = size - 1
+		}
+		if right >= size {
+			right = 0
+		}
+		next[i] = curr[i] - coeff1*curr[i]*(curr[i]-curr[left]) + coeff2*(curr[right]-2*curr[i]+curr[left])
 	}
 	return
 }

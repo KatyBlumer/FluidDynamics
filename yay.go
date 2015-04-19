@@ -25,7 +25,7 @@ func main() {
 		baseIntensity: 1.0,
 		maxIntensity:  2.0,
 		c:             float64(1.0),
-		viscosity:     0.2,
+		viscosity:     0.3,
 	}
 	simConsts.xstep = float64(2.0 / float64(simConsts.numBoxes-1))
 	simConsts.sigma = 1.0 / simConsts.maxIntensity
@@ -42,7 +42,7 @@ func main() {
 	for i := 0; i < simConsts.numBoxes; i++ {
 		currRow[i] = simConsts.baseIntensity
 	}
-	for i := 160; i < 240; i++ {
+	for i := 149; i < 251; i++ {
 		currRow[i] = simConsts.maxIntensity
 	}
 

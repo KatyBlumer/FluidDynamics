@@ -9,8 +9,8 @@ import (
 // heavily borrowed from: http://nbviewer.ipython.org/github/barbagroup/CFDPython/tree/master/lessons/
 
 type SimConstants struct {
-	baseIntensity, maxIntensity, c, viscosity, tstep, xstep, sigma float64
-	numSteps, numBoxes                                             int
+	baseIntensity, maxIntensity, c, viscosity, tstep, xstep, ystep, sigma float64
+	numTSteps, numXSteps, numYSteps                                       int
 }
 
 func main() {
@@ -19,42 +19,43 @@ func main() {
 	// physicalWidth = float64(2.0)
 	// runs := 20 //int(t / simConsts.tstep)
 
+	fileNameFormat := "graphT%v.png"
+
 	simConsts := SimConstants{
-		numSteps:      1000,
-		numBoxes:      400,
+		numTSteps:     10,
+		numXSteps:     400,
+		numYSteps:     400,
 		baseIntensity: 1.0,
 		maxIntensity:  2.0,
-		c:             float64(1.0),
-		viscosity:     0.3,
+		c:             1.0,
+		viscosity:     0.01,
 	}
-	simConsts.xstep = float64(2.0 / float64(simConsts.numBoxes-1))
+	simConsts.xstep = float64(2.0 / float64(simConsts.numXSteps-1))
+	simConsts.ystep = float64(2.0 / float64(simConsts.numYSteps-1))
 	simConsts.sigma = 1.0 / simConsts.maxIntensity
 	simConsts.tstep = simConsts.sigma * math.Pow(simConsts.xstep, 2) / simConsts.viscosity
 
-	width := simConsts.numSteps
-	height := simConsts.numBoxes
+	currRow := make2DArray(simConsts.numXSteps, simConsts.numYSteps)
+	nextRow := make2DArray(simConsts.numXSteps, simConsts.numYSteps)
 
-	graph := drawing.InitGraph(width, height)
-
-	currRow := make([]float64, simConsts.numBoxes)
-	nextRow := make([]float64, simConsts.numBoxes)
-
-	for i := 0; i < simConsts.numBoxes; i++ {
-		currRow[i] = simConsts.baseIntensity
-	}
-	for i := 149; i < 251; i++ {
-		currRow[i] = simConsts.maxIntensity
+	for x := 0; x < simConsts.numXSteps; x++ {
+		for y := 0; y < simConsts.numYSteps; y++ {
+			if x >= 149 && x <= 250 && y >= 149 && y <= 250 {
+				currRow[x][y] = simConsts.maxIntensity
+			} else {
+				currRow[x][y] = simConsts.baseIntensity
+			}
+		}
 	}
 
-	for i := 0; i < simConsts.numSteps; i++ {
-		drawing.DrawRow(i, currRow[:], graph, simConsts.maxIntensity)
-		nextTimeStepBurgers(currRow[:], nextRow[:], simConsts)
-		fmt.Println(sum(&currRow))
+	for t := 0; t < simConsts.numTSteps; t++ {
+		drawing.SaveFrame(t, currRow[:], simConsts.maxIntensity, fileNameFormat)
+		nextTimeStep2DLinearConvection(currRow[:], nextRow[:], simConsts)
+		fmt.Println(sum2D(currRow))
 		currRow, nextRow = nextRow, currRow
 	}
 
-	drawing.Show(graph)
-
+	drawing.ShowFile(fmt.Sprintf(fileNameFormat, simConsts.numTSteps-1))
 }
 
 func nextTimeStepAverage(curr []float64, next []float64, simConsts SimConstants) {
@@ -116,6 +117,35 @@ func nextTimeStepBurgers(curr []float64, next []float64, simConsts SimConstants)
 			right = 0
 		}
 		next[i] = curr[i] - coeff1*curr[i]*(curr[i]-curr[left]) + coeff2*(curr[right]-2*curr[i]+curr[left])
+	}
+	return
+}
+
+func nextTimeStep2DLinearConvection(curr [][]float64, next [][]float64, simConsts SimConstants) {
+	xCoeff := simConsts.c * simConsts.tstep / simConsts.xstep
+	yCoeff := simConsts.c * simConsts.tstep / simConsts.ystep
+
+	xSize := len(curr)
+	ySize := len(curr[0])
+
+	for x := 0; x < xSize; x++ {
+		left, right := x-1, x+1
+		if left < 0 {
+			left = xSize - 1
+		}
+		if right >= xSize {
+			right = 0
+		}
+		for y := 0; y < ySize; y++ {
+			top, bottom := y-1, y+1
+			if top < 0 {
+				top = ySize - 1
+			}
+			if bottom >= ySize {
+				bottom = 0
+			}
+			next[x][y] = curr[x][y] - xCoeff*(curr[x][y]-curr[left][y]) - yCoeff*(curr[x][y]-curr[x][top])
+		}
 	}
 	return
 }

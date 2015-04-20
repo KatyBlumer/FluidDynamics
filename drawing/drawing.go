@@ -1,6 +1,7 @@
 package drawing
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"image/png"
@@ -20,6 +21,14 @@ func DrawRow(rowNum int, row []float64, graph *image.RGBA, maxIntensity float64)
 	}
 }
 
+func SaveFrame(t int, frame [][]float64, maxIntensity float64, fileNameFormat string) {
+	graph := InitGraph(len(frame), len(frame[0]))
+	for x := 0; x < len(frame); x++ {
+		DrawRow(x, frame[x], graph, maxIntensity)
+	}
+	save(graph, fmt.Sprintf(fileNameFormat, t))
+}
+
 func createColor(pointIntensity float64, maxIntensity float64) (ans color.Color) {
 	if pointIntensity > maxIntensity {
 		ans = color.RGBA{255, 0, 0, 255} // red
@@ -37,7 +46,10 @@ func createColor(pointIntensity float64, maxIntensity float64) (ans color.Color)
 func Show(im image.Image) {
 	filename := "graph.png"
 	save(im, filename)
+	ShowFile(filename)
+}
 
+func ShowFile(filename string) {
 	command := "open"
 	arg1 := "-a"
 	arg2 := "/Applications/Preview.app"

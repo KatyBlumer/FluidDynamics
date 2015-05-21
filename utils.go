@@ -1,5 +1,9 @@
 package main
 
+import (
+	"os"
+)
+
 func make2DArray(x, y int) [][]float64 {
 	arr := make([][]float64, x)
 	for i := 0; i < y; i++ {
@@ -20,4 +24,9 @@ func sum2D(a [][]float64) (s float64) {
 		s += sum(a[i])
 	}
 	return
+}
+
+func clearFolder(folderName string) {
+	os.RemoveAll(folderName)
+	os.Mkdir(folderName, 0755)
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/KatyBlumer/FluidDynamics/drawing"
 	"math"
+	"os"
 )
 
 // heavily borrowed from: http://nbviewer.ipython.org/github/barbagroup/CFDPython/tree/master/lessons/
@@ -19,7 +20,11 @@ func main() {
 	// physicalWidth = float64(2.0)
 	// runs := 20 //int(t / simConsts.tstep)
 
-	fileNameFormat := "graphT%v.png"
+	fileNameFormat := "graph%d.png"
+	tempFolderName := "./temp/"
+	gifFileName := "graph.gif"
+	clearFolder(tempFolderName)
+	os.Remove(gifFileName)
 
 	simConsts := SimConstants{
 		numTSteps:     10,
@@ -49,13 +54,15 @@ func main() {
 	}
 
 	for t := 0; t < simConsts.numTSteps; t++ {
-		drawing.SaveFrame(t, currRow[:], simConsts.maxIntensity, fileNameFormat)
+		drawing.SaveFrame(t, currRow[:], simConsts.maxIntensity, tempFolderName+fileNameFormat)
 		nextTimeStep2DLinearConvection(currRow[:], nextRow[:], simConsts)
 		fmt.Println(sum2D(currRow))
+
 		currRow, nextRow = nextRow, currRow
 	}
 
-	drawing.ShowFile(fmt.Sprintf(fileNameFormat, simConsts.numTSteps-1))
+	drawing.CreateGif(fileNameFormat, tempFolderName, gifFileName)
+	drawing.ShowFile(gifFileName)
 }
 
 func nextTimeStepAverage(curr []float64, next []float64, simConsts SimConstants) {

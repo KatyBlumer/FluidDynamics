@@ -1,6 +1,7 @@
 package drawing
 
 import (
+	// "bytes"
 	"fmt"
 	"image"
 	"image/color"
@@ -29,6 +30,21 @@ func SaveFrame(t int, frame [][]float64, maxIntensity float64, fileNameFormat st
 	save(graph, fmt.Sprintf(fileNameFormat, t))
 }
 
+func CreateGif(fileNameFormat, tempFolderName, gifFileName string) {
+	// running the command from Go doesn't work
+	// command := "sh -c /Users/kblumer/go/src/github.com/KatyBlumer/FluidDynamics/drawing/ffmpeg.sh"
+	// command := "ffmpeg.sh"
+	command := "sh"
+	arg1 := "-c"
+	arg2 := "ffmpeg.sh"
+
+	out, err := exec.Command(command, arg1, arg2).Output()
+	log.Printf("%s", out)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func createColor(pointIntensity float64, maxIntensity float64) (ans color.Color) {
 	if pointIntensity > maxIntensity {
 		ans = color.RGBA{255, 0, 0, 255} // red
@@ -43,8 +59,7 @@ func createColor(pointIntensity float64, maxIntensity float64) (ans color.Color)
 	return
 }
 
-func Show(im image.Image) {
-	filename := "graph.png"
+func Show(im image.Image, filename string) {
 	save(im, filename)
 	ShowFile(filename)
 }

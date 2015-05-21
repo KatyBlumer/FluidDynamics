@@ -27,17 +27,17 @@ func main() {
 	os.Remove(gifFileName)
 
 	simConsts := SimConstants{
-		numTSteps:     200,
-		numXSteps:     400,
-		numYSteps:     400,
+		numTSteps:     17,
+		numXSteps:     31,
+		numYSteps:     31,
 		baseIntensity: 1.0,
 		maxIntensity:  2.0,
 		c:             1.0,
-		viscosity:     0.01,
+		viscosity:     0.05,
 	}
 	simConsts.xstep = float64(2.0 / float64(simConsts.numXSteps-1))
 	simConsts.ystep = float64(2.0 / float64(simConsts.numYSteps-1))
-	simConsts.sigma = 1.0 / simConsts.maxIntensity
+	simConsts.sigma = 0.25
 	simConsts.tstep = simConsts.sigma * math.Pow(simConsts.xstep, 2) / simConsts.viscosity
 
 	currFrame := make2DArray(simConsts.numXSteps, simConsts.numYSteps)
@@ -45,7 +45,7 @@ func main() {
 
 	for x := 0; x < simConsts.numXSteps; x++ {
 		for y := 0; y < simConsts.numYSteps; y++ {
-			if x >= 149 && x <= 250 && y >= 149 && y <= 250 {
+			if x >= 8 && x <= 16 && y >= 8 && y <= 16 {
 				currFrame[x][y] = simConsts.maxIntensity
 			} else {
 				currFrame[x][y] = simConsts.baseIntensity
@@ -53,16 +53,12 @@ func main() {
 		}
 	}
 
-	currV := currFrame
-	nextV := nextFrame
-
 	for t := 0; t < simConsts.numTSteps; t++ {
 		drawing.SaveFrame(t, currFrame[:], simConsts.maxIntensity, tempFolderName+fileNameFormat)
-		nextTimeStep2DNonLinearConvection(currFrame[:], nextFrame[:], currV, nextV, simConsts)
+		nextTimeStep2DDiffusion(currFrame[:], nextFrame[:], simConsts)
 		fmt.Println(sum2D(currFrame))
 
 		currFrame, nextFrame = nextFrame, currFrame
-		currV, nextV = nextV, currV
 	}
 
 	drawing.CreateGif(fileNameFormat, tempFolderName, gifFileName)
@@ -193,4 +189,45 @@ func nextTimeStep2DNonLinearConvection(curr, next, currV, nextV [][]float64, sim
 		}
 	}
 	return
+}
+
+func nextTimeStep2DDiffusion(curr, next [][]float64, simConsts SimConstants) {
+	xCoeff := simConsts.viscosity * simConsts.tstep / (simConsts.xstep * simConsts.xstep)
+	yCoeff := simConsts.viscosity * simConsts.tstep / (simConsts.ystep * simConsts.ystep)
+
+	xSize := len(curr)
+	ySize := len(curr[0])
+
+	for x := 0; x < xSize; x++ {
+		left, right := x-1, x+1
+		if left < 0 {
+			left = xSize - 1
+		}
+		if right >= xSize {
+			right = 0
+		}
+		for y := 0; y < ySize; y++ {
+			top, bottom := y-1, y+1
+			if top < 0 {
+				top = ySize - 1
+			}
+			if bottom >= ySize {
+				bottom = 0
+			}
+			next[x][y] = curr[x][y] +
+				xCoeff*(curr[left][y]-2*curr[x][y]+curr[right][y]) +
+				yCoeff*(curr[x][top]-2*curr[x][y]+curr[x][bottom])
+		}
+	}
+	addBoundaryConditions(next, simConsts.baseIntensity)
+	return
+}
+
+func addBoundaryConditions(arr [][]float64, value float64) {
+	arr[0] = makeArray(len(arr), value)
+	arr[len(arr)-1] = makeArray(len(arr), value)
+	for i := 0; i < len(arr); i++ {
+		arr[i][0] = value
+		arr[i][len(arr[0])-1] = value
+	}
 }

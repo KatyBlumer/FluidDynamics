@@ -12,6 +12,14 @@ func make2DArray(x, y int) [][]float64 {
 	return arr
 }
 
+func makeArray(size int, value float64) []float64 {
+	arr := make([]float64, size)
+	for i := 0; i < size; i++ {
+		arr[i] = value
+	}
+	return arr
+}
+
 func sum(a []float64) (s float64) {
 	for _, v := range a {
 		s += v

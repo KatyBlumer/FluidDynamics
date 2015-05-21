@@ -27,7 +27,7 @@ func main() {
 	os.Remove(gifFileName)
 
 	simConsts := SimConstants{
-		numTSteps:     100,
+		numTSteps:     200,
 		numXSteps:     400,
 		numYSteps:     400,
 		baseIntensity: 1.0,

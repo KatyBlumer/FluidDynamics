@@ -27,7 +27,7 @@ func main() {
 	os.Remove(gifFileName)
 
 	simConsts := SimConstants{
-		numTSteps:     10,
+		numTSteps:     100,
 		numXSteps:     400,
 		numYSteps:     400,
 		baseIntensity: 1.0,
@@ -40,25 +40,29 @@ func main() {
 	simConsts.sigma = 1.0 / simConsts.maxIntensity
 	simConsts.tstep = simConsts.sigma * math.Pow(simConsts.xstep, 2) / simConsts.viscosity
 
-	currRow := make2DArray(simConsts.numXSteps, simConsts.numYSteps)
-	nextRow := make2DArray(simConsts.numXSteps, simConsts.numYSteps)
+	currFrame := make2DArray(simConsts.numXSteps, simConsts.numYSteps)
+	nextFrame := make2DArray(simConsts.numXSteps, simConsts.numYSteps)
 
 	for x := 0; x < simConsts.numXSteps; x++ {
 		for y := 0; y < simConsts.numYSteps; y++ {
 			if x >= 149 && x <= 250 && y >= 149 && y <= 250 {
-				currRow[x][y] = simConsts.maxIntensity
+				currFrame[x][y] = simConsts.maxIntensity
 			} else {
-				currRow[x][y] = simConsts.baseIntensity
+				currFrame[x][y] = simConsts.baseIntensity
 			}
 		}
 	}
 
-	for t := 0; t < simConsts.numTSteps; t++ {
-		drawing.SaveFrame(t, currRow[:], simConsts.maxIntensity, tempFolderName+fileNameFormat)
-		nextTimeStep2DLinearConvection(currRow[:], nextRow[:], simConsts)
-		fmt.Println(sum2D(currRow))
+	currV := currFrame
+	nextV := nextFrame
 
-		currRow, nextRow = nextRow, currRow
+	for t := 0; t < simConsts.numTSteps; t++ {
+		drawing.SaveFrame(t, currFrame[:], simConsts.maxIntensity, tempFolderName+fileNameFormat)
+		nextTimeStep2DNonLinearConvection(currFrame[:], nextFrame[:], currV, nextV, simConsts)
+		fmt.Println(sum2D(currFrame))
+
+		currFrame, nextFrame = nextFrame, currFrame
+		currV, nextV = nextV, currV
 	}
 
 	drawing.CreateGif(fileNameFormat, tempFolderName, gifFileName)
@@ -152,6 +156,40 @@ func nextTimeStep2DLinearConvection(curr [][]float64, next [][]float64, simConst
 				bottom = 0
 			}
 			next[x][y] = curr[x][y] - xCoeff*(curr[x][y]-curr[left][y]) - yCoeff*(curr[x][y]-curr[x][top])
+		}
+	}
+	return
+}
+
+func nextTimeStep2DNonLinearConvection(curr, next, currV, nextV [][]float64, simConsts SimConstants) {
+	xCoeff := simConsts.tstep / simConsts.xstep
+	yCoeff := simConsts.tstep / simConsts.ystep
+
+	xSize := len(curr)
+	ySize := len(curr[0])
+
+	for x := 0; x < xSize; x++ {
+		left, right := x-1, x+1
+		if left < 0 {
+			left = xSize - 1
+		}
+		if right >= xSize {
+			right = 0
+		}
+		for y := 0; y < ySize; y++ {
+			top, bottom := y-1, y+1
+			if top < 0 {
+				top = ySize - 1
+			}
+			if bottom >= ySize {
+				bottom = 0
+			}
+			next[x][y] = curr[x][y] -
+				xCoeff*curr[x][y]*(curr[x][y]-curr[left][y]) -
+				yCoeff*currV[x][y]*(curr[x][y]-curr[x][top])
+			nextV[x][y] = currV[x][y] -
+				xCoeff*curr[x][y]*(currV[x][y]-currV[left][y]) -
+				yCoeff*currV[x][y]*(currV[x][y]-currV[x][top])
 		}
 	}
 	return

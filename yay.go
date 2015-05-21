@@ -27,9 +27,9 @@ func main() {
 	os.Remove(gifFileName)
 
 	simConsts := SimConstants{
-		numTSteps:     17,
-		numXSteps:     31,
-		numYSteps:     31,
+		numTSteps:     200,
+		numXSteps:     400,
+		numYSteps:     400,
 		baseIntensity: 1.0,
 		maxIntensity:  2.0,
 		c:             1.0,
@@ -45,7 +45,7 @@ func main() {
 
 	for x := 0; x < simConsts.numXSteps; x++ {
 		for y := 0; y < simConsts.numYSteps; y++ {
-			if x >= 8 && x <= 16 && y >= 8 && y <= 16 {
+			if x >= 149 && x <= 250 && y >= 149 && y <= 250 {
 				currFrame[x][y] = simConsts.maxIntensity
 			} else {
 				currFrame[x][y] = simConsts.baseIntensity

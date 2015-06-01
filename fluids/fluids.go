@@ -23,7 +23,7 @@ func initializeSimConstants(simConsts SimConstants) SimConstants {
 	return simConsts
 }
 
-func main() {
+func MakeGif() {
 	simConsts := initializeSimConstants(SimConstants{
 		numTSteps:     200,
 		numXSteps:     400,
@@ -34,10 +34,33 @@ func main() {
 		viscosity:     0.05,
 	})
 
-	makeGif(simConsts, nextTimeStep2DDiffusion)
+	fileNameFormat := "graph%d.png"
+	tempFolderName := "../temp/"
+	gifFileName := "../graph.gif"
+
+	makeTempFrames(simConsts, nextTimeStep2DDiffusion)
+	drawing.CreateGif(fileNameFormat, tempFolderName, gifFileName)
+	drawing.ShowFile(gifFileName)
 }
 
-func makeGif(simConsts SimConstants, timeStepFn func([][]float64, [][]float64, SimConstants)) {
+func MakeLastFrame() {
+	simConsts := initializeSimConstants(SimConstants{
+		numTSteps:     200,
+		numXSteps:     400,
+		numYSteps:     400,
+		baseIntensity: 1.0,
+		maxIntensity:  2.0,
+		c:             1.0,
+		viscosity:     0.05,
+	})
+	makeTempFrames(simConsts, nextTimeStep2DDiffusion)
+	err := os.Rename("../temp/graph198.png", "../lastFrame.png")
+	if err != nil {
+		panic(err)
+	}
+}
+
+func makeTempFrames(simConsts SimConstants, timeStepFn func([][]float64, [][]float64, SimConstants)) {
 
 	// t := 1.0
 	// physicalWidth = float64(2.0)
@@ -45,9 +68,9 @@ func makeGif(simConsts SimConstants, timeStepFn func([][]float64, [][]float64, S
 
 	fileNameFormat := "graph%d.png"
 	tempFolderName := "../temp/"
-	gifFileName := "../graph.gif"
-	clearFolder(tempFolderName)
-	os.Remove(gifFileName)
+	// gifFileName := "../graph.gif"
+	// clearFolder(tempFolderName)
+	// os.Remove(gifFileName)
 
 	currFrame := make2DArray(simConsts.numXSteps, simConsts.numYSteps)
 	nextFrame := make2DArray(simConsts.numXSteps, simConsts.numYSteps)
@@ -63,6 +86,7 @@ func makeGif(simConsts SimConstants, timeStepFn func([][]float64, [][]float64, S
 	}
 
 	for t := 0; t < simConsts.numTSteps; t++ {
+
 		drawing.SaveFrame(t, currFrame[:], simConsts.maxIntensity, tempFolderName+fileNameFormat)
 		timeStepFn(currFrame[:], nextFrame[:], simConsts)
 		fmt.Println(sum2D(currFrame))
@@ -70,8 +94,6 @@ func makeGif(simConsts SimConstants, timeStepFn func([][]float64, [][]float64, S
 		currFrame, nextFrame = nextFrame, currFrame
 	}
 
-	drawing.CreateGif(fileNameFormat, tempFolderName, gifFileName)
-	drawing.ShowFile(gifFileName)
 }
 
 func nextTimeStepAverage(curr []float64, next []float64, simConsts SimConstants) {

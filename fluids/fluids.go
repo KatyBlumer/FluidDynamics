@@ -1,4 +1,4 @@
-package main
+package fluids
 
 import (
 	"fmt"
@@ -14,19 +14,17 @@ type SimConstants struct {
 	numTSteps, numXSteps, numYSteps                                       int
 }
 
+func initializeSimConstants(simConsts SimConstants) SimConstants {
+	simConsts.xstep = float64(2.0 / float64(simConsts.numXSteps-1))
+	simConsts.ystep = float64(2.0 / float64(simConsts.numYSteps-1))
+	simConsts.sigma = 0.25
+	simConsts.tstep = simConsts.sigma * math.Pow(simConsts.xstep, 2) / simConsts.viscosity
+
+	return simConsts
+}
+
 func main() {
-
-	// t := 1.0
-	// physicalWidth = float64(2.0)
-	// runs := 20 //int(t / simConsts.tstep)
-
-	fileNameFormat := "graph%d.png"
-	tempFolderName := "./temp/"
-	gifFileName := "graph.gif"
-	clearFolder(tempFolderName)
-	os.Remove(gifFileName)
-
-	simConsts := SimConstants{
+	simConsts := initializeSimConstants(SimConstants{
 		numTSteps:     200,
 		numXSteps:     400,
 		numYSteps:     400,
@@ -34,11 +32,22 @@ func main() {
 		maxIntensity:  2.0,
 		c:             1.0,
 		viscosity:     0.05,
-	}
-	simConsts.xstep = float64(2.0 / float64(simConsts.numXSteps-1))
-	simConsts.ystep = float64(2.0 / float64(simConsts.numYSteps-1))
-	simConsts.sigma = 0.25
-	simConsts.tstep = simConsts.sigma * math.Pow(simConsts.xstep, 2) / simConsts.viscosity
+	})
+
+	makeGif(simConsts, nextTimeStep2DDiffusion)
+}
+
+func makeGif(simConsts SimConstants, timeStepFn func([][]float64, [][]float64, SimConstants)) {
+
+	// t := 1.0
+	// physicalWidth = float64(2.0)
+	// runs := 20 //int(t / simConsts.tstep)
+
+	fileNameFormat := "graph%d.png"
+	tempFolderName := "../temp/"
+	gifFileName := "../graph.gif"
+	clearFolder(tempFolderName)
+	os.Remove(gifFileName)
 
 	currFrame := make2DArray(simConsts.numXSteps, simConsts.numYSteps)
 	nextFrame := make2DArray(simConsts.numXSteps, simConsts.numYSteps)
@@ -55,7 +64,7 @@ func main() {
 
 	for t := 0; t < simConsts.numTSteps; t++ {
 		drawing.SaveFrame(t, currFrame[:], simConsts.maxIntensity, tempFolderName+fileNameFormat)
-		nextTimeStep2DDiffusion(currFrame[:], nextFrame[:], simConsts)
+		timeStepFn(currFrame[:], nextFrame[:], simConsts)
 		fmt.Println(sum2D(currFrame))
 
 		currFrame, nextFrame = nextFrame, currFrame

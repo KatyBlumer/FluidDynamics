@@ -23,6 +23,56 @@ func initializeSimConstants(simConsts SimConstants) SimConstants {
 	return simConsts
 }
 
+type video struct {
+	length int
+	frames [][][]float64
+}
+
+func RunSim(simConsts SimConstants, timeStepFn func([][]float64, [][]float64, SimConstants)) video {
+	record := video{
+		length: simConsts.numTSteps,
+		frames: make([][][]float64, simConsts.numTSteps),
+	}
+
+	firstFrame := make2DArray(simConsts.numXSteps, simConsts.numYSteps)
+
+	for x := 0; x < simConsts.numXSteps; x++ {
+		for y := 0; y < simConsts.numYSteps; y++ {
+			if x >= 149 && x <= 250 && y >= 149 && y <= 250 {
+				firstFrame[x][y] = simConsts.maxIntensity
+			} else {
+				firstFrame[x][y] = simConsts.baseIntensity
+			}
+		}
+	}
+
+	record.frames[0] = firstFrame
+
+	for t := 1; t < simConsts.numTSteps; t++ {
+		currFrame := make2DArray(simConsts.numXSteps, simConsts.numYSteps)
+		timeStepFn(record.frames[t-1], currFrame, simConsts)
+		fmt.Println(sum2D(currFrame))
+
+		record.frames[t] = currFrame
+	}
+
+	return record
+}
+
+func MakeStruct() video {
+	simConsts := initializeSimConstants(SimConstants{
+		numTSteps:     200,
+		numXSteps:     400,
+		numYSteps:     400,
+		baseIntensity: 1.0,
+		maxIntensity:  2.0,
+		c:             1.0,
+		viscosity:     0.05,
+	})
+
+	return RunSim(simConsts, nextTimeStep2DDiffusion)
+}
+
 func MakeGif() {
 	simConsts := initializeSimConstants(SimConstants{
 		numTSteps:     200,
